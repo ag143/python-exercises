@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoJS Dynamic Sidebar</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gojs/2.3.11/go.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+        }
+        .sidebar {
+            width: 250px;
+            min-width: 5%;
+            max-width: 250px;
+            background-color: #f4f4f4;
+            overflow-y: auto;
+            padding: 10px;
+            transition: width 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 5%;
+            overflow: hidden;
+            padding: 10px 5px;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        select, input {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        .list-item {
+            padding: 8px;
+            background-color: #ddd;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        .list-item:hover {
+            background-color: #bbb;
+        }
+        #myDiagramDiv {
+            width: 100%;
+            max-width: 100%;
+            height: 80vh;
+            border: 1px solid black;
+            background-color: #f9f9f9;
+            padding: 10px;
+            overflow: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100ch;
+        }
+        .toggle-btn {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <h1>GoJS Dynamic Sidebar</h1>
+    </header>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <select id="menuSelect"></select>
+            <input type="text" id="search" placeholder="Search...">
+            <div id="menuList"></div>
+        </div>
+        <div class="content">
+            <div id="myDiagramDiv"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("collapsed");
+        }
+
+        let dataSets = {
+            set1: [
+                { id: 1, name: "code.js", code: "code.java" },
+                { id: 2, name: "code.py", code: "code.py" },
+                { id: 3, name: "code.html", code: "code.html" }
+            ],
+            set2: [
+                { id: 4, name: "code.css", code: "code.css" },
+                { id: 5, name: "code.java", code: "code.java" },
+                { id: 6, name: "code.json", code: "code.json" }
+            ]
+        };
+
+        function populateDropdown() {
+            let menuSelect = document.getElementById("menuSelect");
+            menuSelect.innerHTML = "";
+            Object.keys(dataSets).forEach(set => {
+                let option = document.createElement("option");
+                option.value = set;
+                option.textContent = set.charAt(0).toUpperCase() + set.slice(1);
+                menuSelect.appendChild(option);
+            });
+        }
+
+        function updateMenu() {
+            let selectedSet = document.getElementById("menuSelect").value;
+            let menuList = document.getElementById("menuList");
+            menuList.innerHTML = "";
+            dataSets[selectedSet].forEach(item => {
+                let div = document.createElement("div");
+                div.className = "list-item";
+                div.dataset.code = item.code;
+                div.innerText = item.name;
+                div.onclick = function () { loadExternalCode(item.code); };
+                menuList.appendChild(div);
+            });
+        }
+
+        document.getElementById("search").addEventListener("input", function () {
+            let searchTerm = this.value.toLowerCase();
+            document.querySelectorAll(".list-item").forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(searchTerm) ? "block" : "none";
+            });
+        });
+
+        function loadExternalCode(filename) {
+            fetch(filename)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("myDiagramDiv").textContent = data;
+                })
+                .catch(error => {
+                    document.getElementById("myDiagramDiv").textContent = "Error loading " + filename;
+                });
+        }
+
+        document.getElementById("menuSelect").addEventListener("change", updateMenu);
+        populateDropdown();
+        updateMenu();
+    </script>
+</body>
+</html>
